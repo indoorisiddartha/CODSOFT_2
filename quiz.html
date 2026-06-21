@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Quiz App</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* CSS STYLES */
+        :root {
+            --bg-gradient: linear-gradient(135deg, #f3e7ff 0%, #e3cdff 100%);
+            --card-bg: #ffffff;
+            --primary: #9b6bdf;
+            --primary-dark: #7e4ebd;
+            --primary-light: #f0e6ff;
+            --text-main: #333333;
+            --text-muted: #666666;
+            --success: #2ecc71;
+            --error: #e74c3c;
+            --warning: #f1c40f;
+            --radius-lg: 24px;
+            --radius-md: 16px;
+            --shadow: 0 10px 30px rgba(155, 107, 223, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: var(--text-main);
+        }
+
+        .phone-container {
+            width: 100%;
+            max-width: 410px;
+            height: 820px;
+            background: #fdfaff;
+            border-radius: 40px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+            border: 11px solid #1a1a1a;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Speaker & Camera Notch Simulator */
+        .phone-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 140px;
+            height: 25px;
+            background: #1a1a1a;
+            border-bottom-left-radius: 15px;
+            border-bottom-right-radius: 15px;
+            z-index: 100;
+        }
+
+        .screen {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            padding: 40px 25px 25px 25px;
+            overflow-y: auto;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* Utility Components */
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(155, 107, 223, 0.3);
+            width: 100%;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            width: 100%;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--primary-dark);
+            font-size: 0.9rem;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 14px 20px;
+            border: 2px solid #e0d5f5;
+            border-radius: var(--radius-md);
+            outline: none;
+            font-size: 1rem;
+            transition: 0.3s;
+            background: #fff;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(155, 107, 223, 0.1);
+        }
+
+        /* SCREEN 1: HOME / REGISTRATION */
+        #home-screen {
+            justify-content: space-between;
+            align-items: center;
+            text-align: center;
+        }
+
+        .welcome-hero {
+            margin-top: 40px;
+            display: flex;
+            flex-direction: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .quiz-logo-wrapper {
+            background: var(--primary-light);
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .quiz-logo-wrapper i {
+            font-size: 3.5rem;
+            color: var(--primary);
+        }
+
+        .welcome-hero h1 {
+            font-size: 2.2rem;
+            color: var(--primary-dark);
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .welcome-hero p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .form-container {
+            width: 100%;
+            background: white;
+            padding: 20px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            margin: 20px 0;
+        }
+
+        /* SCREEN 2: QUIZ MAIN INTERFACE */
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .progress-pill {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .score-pill {
+            background: #fff3cd;
+            color: #856404;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .question-card {
+            background: var(--primary-light);
+            border-radius: var(--radius-lg);
+            padding: 25px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+            box-shadow: inset 0 0 20px rgba(255,255,255,0.6);
+        }
+
+        .question-card h3 {
+            font-size: 1.25rem;
+            color: #4a2880;
+            line-height: 1.5;
+        }
+
+        /* Image Hints Area */
+        .hint-image-container {
+            width: 100%;
+            height: 130px;
+            border-radius: var(--radius-md);
+            margin-bottom: 15px;
+            overflow: hidden;
+            display: none;
+            background: #eee;
+        }
+
+        .hint-image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .hint-action-box {
+            margin-bottom: 20px;
+        }
+
+        .btn-hint {
+            background: #fff;
+            color: var(--warning);
+            border: 2px dashed var(--warning);
+            padding: 10px 15px;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            transition: 0.2s;
+        }
+
+        .btn-hint:hover {
+            background: #fffdf3;
+        }
+
+        .hint-text-display {
+            background: #fffdf0;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            padding: 12px;
+            border-radius: var(--radius-md);
+            font-size: 0.85rem;
+            margin-top: 10px;
+            display: none;
+            text-align: left;
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* Options layout styling matching image 2 */
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .option-item {
+            background: #e3cdff;
+            color: #4a2880;
+            border: none;
+            border-radius: 30px;
+            padding: 15px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .option-item:hover:not(:disabled) {
+            background: #d4b8fc;
+            transform: scale(1.01);
+        }
+
+        .option-badge {
+            background: rgba(255, 255, 255, 0.6);
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 15px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        /* Answer feedback rules */
+        .option-item.correct {
+            background: var(--success) !important;
+            color: white !important;
+        }
+        .option-item.correct .option-badge {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .option-item.wrong {
+            background: var(--error) !important;
+            color: white !important;
+        }
+        .option-item.wrong .option-badge {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .quiz-footer {
+            margin-top: auto;
+        }
+
+        /* SCREEN 3: RESULTS */
+        #result-screen {
+            text-align: center;
+            justify-content: space-between;
+        }
+
+        .results-summary {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 25px 20px;
+            box-shadow: var(--shadow);
+            margin-top: 20px;
+        }
+
+        .score-circle {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            border: 5px solid var(--primary);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 20px auto;
+        }
+
+        .score-big {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--primary-dark);
+        }
+
+        .score-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        .meta-table {
+            width: 100%;
+            margin: 20px 0;
+            border-collapse: collapse;
+        }
+
+        .meta-table td {
+            padding: 10px 5px;
+            border-bottom: 1px solid #f0eafc;
+            font-size: 0.9rem;
+        }
+
+        .meta-table td:first-child {
+            text-align: left;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .meta-table td:last-child {
+            text-align: right;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .badge-success { color: var(--success); }
+        .badge-error { color: var(--error); }
+        .badge-warning { color: var(--warning); }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="phone-container">
+        
+        <div id="home-screen" class="screen active">
+            <div class="welcome-hero">
+                <div class="quiz-logo-wrapper">
+                    <i class="fa-solid fa-brain"></i>
+                </div>
+                <h1>QUIZ</h1>
+                <p>Test your knowledge & skills</p>
+            </div>
+
+            <div class="form-container">
+                <div class="input-group">
+                    <label for="username"><i class="fa-solid fa-user"></i> Candidate Full Name</label>
+                    <input type="text" id="username" placeholder="Enter your name">
+                </div>
+                <div class="input-group">
+                    <label for="quiz-category"><i class="fa-solid fa-layer-group"></i> Select Subject</label>
+                    <select id="quiz-category">
+                        <option value="mix">All Subjects Mix (25 Questions)</option>
+                        <option value="android">Android Apps & Ecosystem</option>
+                        <option value="places">Famous Places & Landmarks</option>
+                        <option value="logos">Company Logos & Brands</option>
+                        <option value="gk">General Knowledge</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="btn" id="start-btn" onclick="startQuiz()">START MOCK TEST</button>
+        </div>
+
+        <div id="quiz-screen" class="screen">
+            <div class="quiz-header">
+                <div class="progress-pill" id="progress-text">Question 1/25</div>
+                <div class="score-pill" id="live-score-text">Score: 0</div>
+            </div>
+
+            <div class="hint-action-box">
+                <button class="btn-hint" id="hint-btn" onclick="revealHint()">
+                    <i class="fa-solid fa-lightbulb"></i> Use Hint (Max 3 Marks)
+                </button>
+                <div class="hint-text-display" id="hint-text"></div>
+            </div>
+
+            <div class="hint-image-container" id="hint-img-box">
+                <img id="hint-img" src="" alt="Question Hint Reference">
+            </div>
+
+            <div class="question-card">
+                <h3 id="question-text">Loading question text...</h3>
+            </div>
+
+            <div class="options-container" id="options-stack">
+                </div>
+
+            <div class="quiz-footer">
+                <button class="btn" id="next-btn" onclick="nextQuestion()" disabled>NEXT QUESTION</button>
+            </div>
+        </div>
+
+        <div id="result-screen" class="screen">
+            <div class="welcome-hero" style="margin-top:20px;">
+                <h2 style="color: var(--primary-dark)">Test Completed!</h2>
+                <p>Here is your performance snapshot</p>
+            </div>
+
+            <div class="results-summary">
+                <div class="score-circle">
+                    <span class="score-big" id="final-score">0</span>
+                    <span class="score-label">Total Score</span>
+                </div>
+
+                <table class="meta-table">
+                    <tr>
+                        <td>Candidate Name</td>
+                        <td id="res-name">-</td>
+                    </tr>
+                    <tr>
+                        <td>Total Questions</td>
+                        <td>25</td>
+                    </tr>
+                    <tr>
+                        <td>Correct Answers</td>
+                        <td id="res-correct" class="badge-success">0</td>
+                    </tr>
+                    <tr>
+                        <td>Wrong Answers</td>
+                        <td id="res-wrong" class="badge-error">0</td>
+                    </tr>
+                    <tr>
+                        <td>Hints Attempted</td>
+                        <td id="res-hints" class="badge-warning">0</td>
+                    </tr>
+                    <tr>
+                        <td>Unanswered/Skipped</td>
+                        <td id="res-skipped">0</td>
+                    </tr>
+                </table>
+            </div>
+
+            <button class="btn" onclick="restartQuiz()">RETAKE MOCK TEST</button>
+        </div>
+
+    </div>
+
+    <script>
+        // Comprehensive Question Bank containing exactly 25 highly contextual questions
+        const questionBank = [
+            // --- CATEGORY: ANDROID APPLICATIONS (Questions 1-6) ---
+            {
+                q: "Which android framework core layout arranges its children in a simple single horizontal or vertical row?",
+                options: ["RelativeLayout", "LinearLayout", "FrameLayout", "ConstraintLayout"],
+                correct: 1,
+                hintText: "It lines elements up linearly.",
+                hintImg: "https://images.unsplash.com/photo-1607252650355-f7fd0460ccdb?w=400"
+            },
+            {
+                q: "What is the official IDE designated by Google for development in modern Android Systems?",
+                options: ["Eclipse", "VS Code", "Android Studio", "Xcode"],
+                correct: 2,
+                hintText: "It shares its name directly with the mobile OS ecosystem workspace.",
+                hintImg: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=400"
+            },
+            {
+                q: "Which file handles configurations, package structural maps, and application permissions in Android applications?",
+                options: ["build.gradle", "AndroidManifest.xml", "MainActivity.java", "strings.xml"],
+                correct: 1,
+                hintText: "It acts as the core manifest document template file written in XML format.",
+                hintImg: "https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=400"
+            },
+            {
+                q: "What is the language recommended by Google since 2019 for building modern native Android apps?",
+                options: ["Java", "Kotlin", "Dart", "C++"],
+                correct: 1,
+                hintText: "It is 100% interoperable with Java and has jet-safe functional programming styles.",
+                hintImg: "https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?w=400"
+            },
+            {
+                q: "Which core app component provides a screen with a user interface that users interact with?",
+                options: ["Service", "Broadcast Receiver", "Activity", "Content Provider"],
+                correct: 2,
+                hintText: "Every screen you view inside any app maps directly to an instance of this component class.",
+                hintImg: "https://images.unsplash.com/photo-1551650975-87deedd944c3?w=400"
+            },
+            {
+                q: "What component is used to background long-running application tasks without interactive user interfaces?",
+                options: ["Activity", "Service", "Intent", "Content Provider"],
+                correct: 1,
+                hintText: "Plays background processes like fetching data patterns or playing music streams.",
+                hintImg: "https://images.unsplash.com/photo-1618401471353-b98aedd07871?w=400"
+            },
+
+            // --- CATEGORY: PLACES & LANDMARKS (Questions 7-12) ---
+            {
+                q: "In which city is the historical Charminar monument situated?",
+                options: ["Mumbai", "New Delhi", "Hyderabad", "Bengaluru"],
+                correct: 2,
+                hintText: "The capital city of Telangana famous for Biryani.",
+                hintImg: "https://images.unsplash.com/photo-1605371924599-2d0365da1ae0?w=400"
+            },
+            {
+                q: "Where is the famous white-marble structure 'Taj Mahal' located in India?",
+                options: ["Agra", "Jaipur", "Delhi", "Lucknow"],
+                correct: 0,
+                hintText: "Located right along the Yamuna river banks in Uttar Pradesh.",
+                hintImg: "https://images.unsplash.com/photo-1564507592333-c60657eea523?w=400"
+            },
+            {
+                q: "Which spectacular framework structural marvel is designated as the tallest building in the entire world?",
+                options: ["Shanghai Tower", "Burj Khalifa", "Empire State Building", "Merdeka 118"],
+                correct: 1,
+                hintText: "This iconic tower pierces the skyline of Downtown Dubai.",
+                hintImg: "https://images.unsplash.com/photo-1582672060674-bc2bd808a8b5?w=400"
+            },
+            {
+                q: "Which iconic French historical structure frames the city landscape background view of Paris?",
+                options: ["Colosseum", "Eiffel Tower", "Big Ben", "Louvre Museum"],
+                correct: 1,
+                hintText: "An iron lattice monument built for the 1889 World's Fair.",
+                hintImg: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400"
+            },
+            {
+                q: "The ancient stone amphitheater 'Colosseum' stands tall inside which European country capital?",
+                options: ["Athens", "Paris", "Madrid", "Rome"],
+                correct: 3,
+                hintText: "Located inside Italy, where gladiators fought historically.",
+                hintImg: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=400"
+            },
+            {
+                q: "Where is the historic archaeological Inca citadel city of Machu Picchu located?",
+                options: ["Peru", "Brazil", "Mexico", "Colombia"],
+                correct: 0,
+                hintText: "High up along the spectacular Andes Mountains chain in South America.",
+                hintImg: "https://images.unsplash.com/photo-1587595431973-160d0d94adb1?w=400"
+            },
+
+            // --- CATEGORY: COMPANY LOGOS & BRANDS (Questions 13-18) ---
+            {
+                q: "Which multinational corporate giant uses a bitten apple as its central branding identity?",
+                options: ["Microsoft", "Apple", "Google", "Intel"],
+                correct: 1,
+                hintText: "Makers of premium iPhone systems, MacBooks, and iPads.",
+                hintImg: "https://images.unsplash.com/photo-1563206767-5b18f218e8de?w=400"
+            },
+            {
+                q: "Which corporate search titan features a simple layout logo consisting of Blue, Red, Yellow, and Green letters?",
+                options: ["Yahoo", "Bing", "Google", "DuckDuckGo"],
+                correct: 2,
+                hintText: "The creator of Android OS, YouTube, and Gmail.",
+                hintImg: "https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?w=400"
+            },
+            {
+                q: "An elegant, dynamic 'Swoosh' vector serves as the globally recognized brand logo asset for which company?",
+                options: ["Adidas", "Puma", "Nike", "Under Armour"],
+                correct: 2,
+                hintText: "Associated globally with the motivational slogan 'Just Do It'.",
+                hintImg: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400"
+            },
+            {
+                q: "Which major electric automobile company features a stylized, sharp vector 'T' badge signature representation?",
+                options: ["Tesla", "Toyota", "Tata Motors", "Ford"],
+                correct: 0,
+                hintText: "Led by Elon Musk; creators of Cybertruck and Model S configurations.",
+                hintImg: "https://images.unsplash.com/photo-1617788138017-80ad40651399?w=400"
+            },
+            {
+                q: "Which fast-food chain's logo features the famous 'Golden Arches' forming a giant stylized letter 'M'?",
+                options: ["KFC", "Burger King", "McDonald's", "Subway"],
+                correct: 2,
+                hintText: "World-famous for its iconic Big Mac and Happy Meals.",
+                hintImg: "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=400"
+            },
+            {
+                q: "Which social platform features a simple white camera silhouette against a vibrant sunset-gradient background?",
+                options: ["Snapchat", "Instagram", "Facebook", "TikTok"],
+                correct: 1,
+                hintText: "A popular Meta-owned image and reels-sharing network.",
+                hintImg: "https://images.unsplash.com/photo-1611262588024-d12430b98920?w=400"
+            },
+
+            // --- CATEGORY: GENERAL KNOWLEDGE (Questions 19-25) ---
+            {
+                q: "Which structural chemical element is represented on the periodic table by the unique single letter 'O'?",
+                options: ["Gold", "Oxygen", "Osmium", "Hydrogen"],
+                correct: 1,
+                hintText: "Vital element essential for human respiration and survival.",
+                hintImg: "https://images.unsplash.com/photo-1532187863486-abf9d39d6618?w=400"
+            },
+            {
+                q: "Which majestic deep-water body is classified as the largest ocean on Planet Earth?",
+                options: ["Atlantic Ocean", "Indian Ocean", "Arctic Ocean", "Pacific Ocean"],
+                correct: 3,
+                hintText: "Home to the deepest trench on Earth, the Mariana Trench.",
+                hintImg: "https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=400"
+            },
+            {
+                q: "What is the capital city of Japan?",
+                options: ["Seoul", "Beijing", "Tokyo", "Bangkok"],
+                correct: 2,
+                hintText: "A massive, hyper-modern metropolitan area hosting Shibuya Crossing.",
+                hintImg: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=400"
+            },
+            {
+                q: "Which planet in our Solar System is widely nicknamed the 'Red Planet' due to its iron-rich soil?",
+                options: ["Venus", "Mars", "Jupiter", "Saturn"],
+                correct: 1,
+                hintText: "It lies between Earth and Jupiter and is home to Olympus Mons.",
+                hintImg: "https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?w=400"
+            },
+            {
+                q: "Who is globally credited with discovering the theory of relativity ($E = mc^2$)?",
+                options: ["Isaac Newton", "Albert Einstein", "Galileo Galilei", "Nikola Tesla"],
+                correct: 1,
+                hintText: "Theoretical physicist famous for his signature wild hair portrait.",
+                hintImg: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400"
+            },
+            {
+                q: "Which gas is most abundant within the atmosphere surrounding our Earth?",
+                options: ["Oxygen", "Carbon Dioxide", "Nitrogen", "Argon"],
+                correct: 2,
+                hintText: "It accounts for roughly 78% of the total atmospheric volume.",
+                hintImg: "https://images.unsplash.com/photo-1590055531615-f16d36ffe8ec?w=400"
+            },
+            {
+                q: "What is the hardest known natural structural mineral substance found on Earth?",
+                options: ["Gold", "Iron", "Diamond", "Quartz"],
+                correct: 2,
+                hintText: "Formed deep under ground from highly pressurized pure carbon matrix arrangements.",
+                hintImg: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400"
+            }
+        ];
+
+        // Core State Parameters Tracking
+        let currentQuestionsList = [];
+        let currentQuestionIndex = 0;
+        let cumulativeScore = 0;
+        let correctAnswersCount = 0;
+        let wrongAnswersCount = 0;
+        let hintsUsedCount = 0;
+        let skippedCount = 0;
+        let hintUsedForCurrentQuestion = false;
+
+        // Initialization Step
+        function startQuiz() {
+            const nameInput = document.getElementById('username').value.trim();
+            if (!nameInput) {
+                alert('Please register your candidate name to begin the mock test.');
+                return;
+            }
+
+            // Route selection patterns
+            const selectedCategory = document.getElementById('quiz-category').value;
+            filterAndPrepareQuestions(selectedCategory);
+
+            // Interface screen swapping
+            document.getElementById('home-screen').classList.remove('active');
+            document.getElementById('quiz-screen').classList.add('active');
+
+            // Reset scores & counters
+            cumulativeScore = 0;
+            currentQuestionIndex = 0;
+            correctAnswersCount = 0;
+            wrongAnswersCount = 0;
+            hintsUsedCount = 0;
+            skippedCount = 0;
+
+            loadQuestionCard();
+        }
+
+        // Filter 25 specific questions based on dropdown choice
+        function filterAndPrepareQuestions(category) {
+            if (category === 'mix') {
+                // Return all 25 mixed questions
+                currentQuestionsList = [...questionBank];
+            } else {
+                // Fallback / dynamic slice matching requirements
+                let startIdx = 0;
+                if (category === 'android') startIdx = 0;
+                else if (category === 'places') startIdx = 6;
+                else if (category === 'logos') startIdx = 12;
+                else if (category === 'gk') startIdx = 18;
+
+                // Take target category and pad dynamically from global set to ensure exactly 25 items
+                let primaryBatch = questionBank.slice(startIdx, startIdx + 7);
+                let remainderBatch = questionBank.filter(item => !primaryBatch.includes(item));
+                currentQuestionsList = [...primaryBatch, ...remainderBatch].slice(0, 25);
+            }
+        }
+
+        // Render current active question to screen view
+        function loadQuestionCard() {
+            hintUsedForCurrentQuestion = false;
+            
+            // UI Component state resets
+            document.getElementById('hint-text').style.display = "none";
+            document.getElementById('hint-img-box').style.display = "none";
+            document.getElementById('hint-btn').disabled = false;
+            document.getElementById('next-btn').disabled = true;
+
+            const qData = currentQuestionsList[currentQuestionIndex];
+
+            // Render stats
+            document.getElementById('progress-text').innerText = `Question ${currentQuestionIndex + 1}/25`;
+            document.getElementById('live-score-text').innerText = `Score: ${cumulativeScore}`;
+            document.getElementById('question-text').innerText = qData.q;
+
+            // Generate clean selection options rows matching image 2 specification layout
+            const stack = document.getElementById('options-stack');
+            stack.innerHTML = '';
+
+            const prefixes = ['A', 'B', 'C', 'D'];
+            qData.options.forEach((optText, index) => {
+                const button = document.createElement('button');
+                button.className = 'option-item';
+                button.onclick = () => selectOption(index);
+                button.innerHTML = `
+                    <div class="option-badge">${prefixes[index]}</div>
+                    <span>${optText}</span>
+                `;
+                stack.appendChild(button);
+            });
+        }
+
+        // Reveal hints context rule handler
+        function revealHint() {
+            const qData = currentQuestionsList[currentQuestionIndex];
+            
+            // Show hint text and structural reference image
+            const hintTextDisplay = document.getElementById('hint-text');
+            hintTextDisplay.innerText = qData.hintText;
+            hintTextDisplay.style.display = "block";
+
+            if (qData.hintImg) {
+                const imgBox = document.getElementById('hint-img-box');
+                document.getElementById('hint-img').src = qData.hintImg;
+                imgBox.style.display = "block";
+            }
+
+            hintUsedForCurrentQuestion = true;
+            hintsUsedCount++;
+            document.getElementById('hint-btn').disabled = true;
+        }
+
+        // Answer Submission and evaluation engine logic 
+        function selectOption(selectedIdx) {
+            const qData = currentQuestionsList[currentQuestionIndex];
+            const stack = document.getElementById('options-stack');
+            const optionsButtons = stack.children;
+
+            // Disable further choices
+            for (let btn of optionsButtons) {
+                btn.disabled = true;
+            }
+            document.getElementById('hint-btn').disabled = true;
+
+            // Determine points rules dynamically
+            let standardCorrectMark = hintUsedForCurrentQuestion ? 3 : 4;
+
+            if (selectedIdx === qData.correct) {
+                // Correct path feedback loop
+                optionsButtons[selectedIdx].classList.add('correct');
+                cumulativeScore += standardCorrectMark;
+                correctAnswersCount++;
+            } else {
+                // Incorrect path feedback loop
+                optionsButtons[selectedIdx].classList.add('wrong');
+                optionsButtons[qData.correct].classList.add('correct'); // Highlight answer right away
+                cumulativeScore -= 1;
+                wrongAnswersCount++;
+            }
+
+            // Refresh live tracking metrics and enable movement rules
+            document.getElementById('live-score-text').innerText = `Score: ${cumulativeScore}`;
+            document.getElementById('next-btn').disabled = false;
+        }
+
+        // Route control step tracking mechanics
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < 25) {
+                loadQuestionCard();
+            } else {
+                displayResultsSummary();
+            }
+        }
+
+        // Final Performance Display Generator Engine
+        function displayResultsSummary() {
+            document.getElementById('quiz-screen').classList.remove('active');
+            document.getElementById('result-screen').classList.add('active');
+
+            // Map stats inputs values 
+            const nameInput = document.getElementById('username').value;
+            skippedCount = 25 - (correctAnswersCount + wrongAnswersCount);
+
+            document.getElementById('final-score').innerText = cumulativeScore;
+            document.getElementById('res-name').innerText = nameInput;
+            document.getElementById('res-correct').innerText = correctAnswersCount;
+            document.getElementById('res-wrong').innerText = wrongAnswersCount;
+            document.getElementById('res-hints').innerText = hintsUsedCount;
+            document.getElementById('res-skipped').innerText = skippedCount;
+        }
+
+        // Reset tracking configurations cleanly
+        function restartQuiz() {
+            document.getElementById('result-screen').classList.remove('active');
+            document.getElementById('home-screen').classList.add('active');
+            document.getElementById('username').value = '';
+        }
+    </script>
+</body>
+</html>
